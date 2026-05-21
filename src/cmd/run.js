@@ -3,25 +3,29 @@
 const fs = require('fs');
 const path = require('path');
 const getSpawner = require('../spawn/index.js');
+const engines = require('../engines/index.js');
 
 /**
- * `mdoffice run "<task>" [--vault <path>] [--cmd <ai-cli>]`
+ * `mdoffice run "<task>" [--vault <path>] [--engine <name>] [--cmd <override>]`
  *
  * v0.1 behavior:
  *   1. Resolve the vault path (default: ./vault).
  *   2. Append the task as a new directive block to 00_ceo/instructions.md.
- *   3. Spawn the office (Chief + Backend + Frontend panes) via the OS adapter.
+ *   3. Resolve the engine (default: claude-code) and verify it's installed.
+ *   4. Spawn the Chief pane via the OS adapter, running the engine CLI in
+ *      the vault root.
  *
- * The Chief/specialist agents themselves are NOT yet wired up in this chunk
- * — this command opens the panes and primes the directive file. Auto
- * delegation lands in the next chunk (Chief system prompt + vault watcher).
+ * The Chief reads vault/CLAUDE.md as its system prompt. Specialists are
+ * defined in vault/.claude/agents/*.md and invoked by the Chief via the
+ * Task tool. mdoffice does not call the LLM directly.
  */
 module.exports = function run(args) {
   const opts = parseArgs(args);
+  if (opts.help) { printRunHelp(); process.exit(0); }
 
   if (!opts.task) {
     console.error('mdoffice run: missing task.');
-    console.error('  usage: mdoffice run "<task>" [--vault <path>] [--cmd <ai-cli>]');
+    console.error('  usage: mdoffice run "<task>" [--vault <path>] [--engine <name>]');
     process.exit(1);
   }
 
@@ -39,8 +43,24 @@ module.exports = function run(args) {
     process.exit(1);
   }
 
+  const engine = engines.get(opts.engine || 'claude-code');
+  if (!engine) {
+    console.error(`mdoffice run: unknown engine '${opts.engine}'.`);
+    console.error(`  available: ${engines.list().join(', ')}`);
+    process.exit(1);
+  }
+
+  const check = engine.check();
+  if (!check.ok) {
+    console.error(`mdoffice run: ${engine.displayName} not available.`);
+    console.error(`  ${check.reason}`);
+    if (check.install) console.error(`  install: ${check.install}`);
+    process.exit(2);
+  }
+
   appendDirective(instructionsPath, opts.task);
   console.log(`✓ directive appended to ${instructionsPath}`);
+  console.log(`✓ engine: ${engine.displayName} (${check.version})`);
 
   let spawner;
   try {
@@ -50,29 +70,23 @@ module.exports = function run(args) {
     process.exit(2);
   }
 
-  const result = spawner({ vaultPath, command: opts.cmd });
+  const cmd = opts.cmdOverride || engine.cmd;
+  const result = spawner({ vaultPath, command: cmd });
   console.log(`✓ office spawned (pid ${result.pid}, layout: ${result.layout})`);
-  console.log('  → Chief, Backend, Frontend panes are opening now.');
-  console.log(`  → Edit ${instructionsPath} any time to add more directives.`);
+  console.log(`  → Chief pane is opening now in your terminal.`);
+  console.log(`  → Edit ${instructionsPath} any time to queue more directives.`);
 };
 
 function parseArgs(args) {
-  const opts = { task: null, vault: null, cmd: null };
+  const opts = { task: null, vault: null, engine: null, cmdOverride: null, help: false };
   for (let i = 0; i < args.length; i++) {
     const a = args[i];
-    if (a === '--vault' || a === '-V') {
-      opts.vault = args[++i];
-    } else if (a === '--cmd' || a === '-c') {
-      opts.cmd = args[++i];
-    } else if (a === '--help' || a === '-h') {
-      printRunHelp();
-      process.exit(0);
-    } else if (!opts.task) {
-      opts.task = a;
-    } else {
-      console.error(`mdoffice run: unexpected argument '${a}'`);
-      process.exit(1);
-    }
+    if (a === '--vault' || a === '-V') opts.vault = args[++i];
+    else if (a === '--engine' || a === '-e') opts.engine = args[++i];
+    else if (a === '--cmd') opts.cmdOverride = args[++i];
+    else if (a === '--help' || a === '-h') opts.help = true;
+    else if (!opts.task) opts.task = a;
+    else { console.error(`mdoffice run: unexpected argument '${a}'`); process.exit(1); }
   }
   return opts;
 }
@@ -84,18 +98,19 @@ function appendDirective(filePath, task) {
 }
 
 function printRunHelp() {
-  console.log(`mdoffice run — spawn the office and queue a directive
+  console.log(`mdoffice run — spawn the Chief pane and queue a directive
 
 usage:
   mdoffice run "<task>" [options]
 
 options:
   --vault <path>    path to the vault (default: ./vault)
-  --cmd <ai-cli>    AI CLI to launch in each pane (default: claude)
+  --engine <name>   AI engine (default: claude-code, available: ${engines.list().join(', ')})
+  --cmd <override>  override the engine's CLI command (rare, for testing)
   --help            show this help
 
 example:
-  mdoffice run "ship the payment module"
-  mdoffice run "fix the login bug" --vault ./my-project-vault
+  mdoffice run "결제 모듈 어떻게 설계할지 정리 좀 도와줘"
+  mdoffice run "이 spec 인터랙티브 프로토타입으로 뽑아줘" --vault ./my-project
 `);
 }

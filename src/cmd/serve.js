@@ -3,21 +3,16 @@
 const fs = require('fs');
 const path = require('path');
 const getSpawner = require('../spawn/index.js');
+const engines = require('../engines/index.js');
 
 /**
- * `mdoffice serve [vault] [--cmd <ai-cli>] [--quiet]`
+ * `mdoffice serve [vault] [--engine <name>] [--quiet]`
  *
- * Primary v0.1 operation mode. Same as `run` except:
- *   - no directive is appended (the user adds directives any time by editing
- *     00_ceo/instructions.md in their editor of choice — Obsidian, VS Code, etc.)
- *   - the process stays alive and watches the vault for file changes,
- *     printing a live log of what's happening
- *   - Ctrl+C stops the watcher; the Chief pane is left running
+ * Primary v0.1 operation mode. Spawns the Chief pane and stays alive watching
+ * the vault for changes (purely for the user's host-shell visibility — the
+ * Chief polls the vault on its own per its system prompt).
  *
- * The Chief itself polls the vault on its own (per its system prompt in
- * vault/CLAUDE.md). This watcher is purely for the user's visibility — so
- * they can see, from their host shell, what the office is doing without
- * tab-switching to the Chief pane.
+ * Ctrl+C stops the watcher; the Chief pane is left running.
  */
 module.exports = function serve(args) {
   const opts = parseArgs(args);
@@ -30,6 +25,21 @@ module.exports = function serve(args) {
     process.exit(1);
   }
 
+  const engine = engines.get(opts.engine || 'claude-code');
+  if (!engine) {
+    console.error(`mdoffice serve: unknown engine '${opts.engine}'.`);
+    console.error(`  available: ${engines.list().join(', ')}`);
+    process.exit(1);
+  }
+
+  const check = engine.check();
+  if (!check.ok) {
+    console.error(`mdoffice serve: ${engine.displayName} not available.`);
+    console.error(`  ${check.reason}`);
+    if (check.install) console.error(`  install: ${check.install}`);
+    process.exit(2);
+  }
+
   let spawner;
   try {
     spawner = getSpawner();
@@ -38,12 +48,14 @@ module.exports = function serve(args) {
     process.exit(2);
   }
 
-  const result = spawner({ vaultPath, command: opts.cmd });
+  const cmd = opts.cmdOverride || engine.cmd;
+  const result = spawner({ vaultPath, command: cmd });
+  console.log(`✓ engine: ${engine.displayName} (${check.version})`);
   console.log(`✓ chief pane spawned (pid ${result.pid})`);
   console.log(`  vault: ${vaultPath}`);
   console.log('');
   console.log('serve mode: watching the vault. edit 00_ceo/instructions.md to');
-  console.log("queue directives; the Chief will pick them up on its own poll.");
+  console.log("queue directives; the Chief picks them up on its next read.");
   console.log('Ctrl+C stops the watcher. The Chief pane is left running.');
   console.log('');
 
@@ -77,8 +89,6 @@ function startWatcher(vaultPath, quiet) {
   process.on('SIGINT', stop);
   process.on('SIGTERM', stop);
 
-  // Keep the event loop alive. setInterval is the cleanest cross-platform
-  // way; the callback is intentionally a no-op.
   setInterval(() => {}, 1 << 30);
 }
 
@@ -91,10 +101,11 @@ function shouldIgnore(filename) {
 }
 
 function parseArgs(args) {
-  const opts = { vault: null, cmd: null, help: false, quiet: false };
+  const opts = { vault: null, engine: null, cmdOverride: null, help: false, quiet: false };
   for (let i = 0; i < args.length; i++) {
     const a = args[i];
-    if (a === '--cmd' || a === '-c') opts.cmd = args[++i];
+    if (a === '--engine' || a === '-e') opts.engine = args[++i];
+    else if (a === '--cmd') opts.cmdOverride = args[++i];
     else if (a === '--vault' || a === '-V') opts.vault = args[++i];
     else if (a === '--quiet' || a === '-q') opts.quiet = true;
     else if (a === '--help' || a === '-h') opts.help = true;
@@ -110,7 +121,8 @@ usage:
   mdoffice serve [vault] [options]
 
 options:
-  --cmd <ai-cli>    AI CLI to launch in the chief pane (default: claude)
+  --engine <name>   AI engine (default: claude-code, available: ${engines.list().join(', ')})
+  --cmd <override>  override the engine's CLI command (rare, for testing)
   --vault <path>    vault path (alternative to positional arg)
   --quiet           don't print the file-change log
   --help            show this help
