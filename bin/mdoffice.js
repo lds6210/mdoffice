@@ -16,7 +16,7 @@ if (cmd === '--version' || cmd === '-v' || cmd === 'version') {
 
 const handlers = {
   init: '../src/cmd/init.js',
-  // run:    '../src/cmd/run.js',     // wired in next step
+  run:  '../src/cmd/run.js',
   // serve:  '../src/cmd/serve.js',   // wired later
   // chief:  '../src/cmd/chief.js',   // wired later
 };
@@ -34,7 +34,7 @@ function printHelp() {
 
 usage:
   mdoffice init [path]           scaffold a vault at <path> (default: ./vault)
-  mdoffice run <task>            (not yet implemented)
+  mdoffice run "<task>"          spawn the office (Chief + Backend + Frontend) and queue a directive
   mdoffice serve                 (not yet implemented)
   mdoffice chief                 (not yet implemented)
 
