@@ -126,7 +126,7 @@ mdoffice serve --vault my-project-vault
 - **Node.js 18+**
 - **Claude Code on PATH** (v0.1's first supported engine). mdoffice checks for it on `init` / `run` / `serve` and tells you what's missing if it isn't there.
 - **A terminal mdoffice can spawn into:**
-  - v0.1: Windows Terminal on Win10 1903+ / Win11, **and** macOS (iTerm2 via AppleScript)
+  - v0.1: **Windows Terminal on Win10 1903+ / Win11** (the maintainer's only test platform). macOS (iTerm2 via AppleScript) code ships but is **untested by the maintainer — community PRs to verify and fix it are welcomed**.
   - v0.2+: Linux (tmux / kitty / gnome-terminal)
 - **Recommended: Obsidian** — the vault is built around markdown. Any editor works (VS Code, Typora, `cat`), but Obsidian is the intended dashboard.
 

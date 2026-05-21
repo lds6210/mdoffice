@@ -216,7 +216,7 @@ One pane. One window. Specialists are non-visual sub-agents. The user reads the 
 - **Codex CLI conventions.** Do they actually use `AGENTS.md`? Sub-agent equivalent? Need to confirm before v0.2.
 - **Specialist output schema lockdown.** Currently encoded in each sub-agent prompt. Should there be a meta-schema doc?
 - **Hot-reload vault.** When the user edits a `.md` file while the Chief is mid-cycle, what happens? Per insight #1, this is rare and OK — Chief picks up changes on next cycle.
-- **macOS testing.** Author works on Windows; `src/spawn/mac.js` is unverified. Either get a Mac, or build a CI step that lints AppleScript.
+- **macOS testing — explicitly punted to community.** Author (lds6210) is Windows-only and confirmed (2026-05-22) that macOS verification is delegated to OSS contributors. `src/spawn/mac.js` ships as-is. Don't gate Windows progress on macOS verification.
 
 ## Dogfooding plan
 

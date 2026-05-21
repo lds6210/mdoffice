@@ -50,7 +50,7 @@ The tool MUST run on Windows AND macOS from v0.1.
 - Spawn logic lives in `src/spawn/<platform>.js`. Dispatch by `process.platform` at runtime.
 - Core logic (vault, chief, watcher, prompts) is platform-agnostic. If you find yourself writing platform-specific code outside `src/spawn/`, stop and refactor.
 - Test on at least one Windows machine before claiming a Windows-only change works.
-- Test on macOS before claiming a macOS-only change works. If unable to test, mark the commit as "untested on <platform>" in the body.
+- macOS: the maintainer (lds6210) is Windows-only and explicitly does NOT test macOS code paths. macOS changes ship "as-is" and rely on community PRs to verify / fix. Mark macOS-touching commits as "untested on macOS — community welcomed" in the body. Don't hold back a commit waiting for macOS verification.
 
 ## 6. Repository hygiene — what goes to GitHub vs stays local
 

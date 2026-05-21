@@ -24,7 +24,14 @@ module.exports = function init(args) {
   }
 
   if (fs.existsSync(target) && fs.readdirSync(target).length > 0) {
-    console.error(`mdoffice init: ${target} already exists and is not empty`);
+    console.error(`mdoffice init: ${target} already exists and is not empty.`);
+    console.error('');
+    console.error('  if it is an old / stale vault, delete it first and re-run:');
+    console.error(`    rm -rf "${target}"   (or delete the folder in your file manager)`);
+    console.error('');
+    console.error('  if it is a working vault, you do not need to init again — just run:');
+    console.error(`    mdoffice serve "${path.relative(process.cwd(), target) || target}"`);
+    console.error(`    mdoffice open "${path.relative(process.cwd(), target) || target}"`);
     process.exit(1);
   }
 
