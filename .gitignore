@@ -1,0 +1,11 @@
+node_modules/
+dist/
+*.log
+.DS_Store
+.env
+.env.*
+
+# user vaults should never be checked into the tool repo
+vault/
+test-vault/
+example-vault/

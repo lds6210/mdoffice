@@ -1,0 +1,39 @@
+{
+  "name": "mdoffice",
+  "version": "0.0.1",
+  "description": "Markdown Office — boot a virtual AI company on top of Windows Terminal. CEO talks to a Chief of Staff; the Chief delegates to up to 10 specialist agents; all coordination is markdown files.",
+  "bin": {
+    "mdoffice": "./bin/mdoffice.js"
+  },
+  "os": [
+    "win32"
+  ],
+  "license": "MIT",
+  "author": "lds6210",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lds6210/mdoffice.git"
+  },
+  "keywords": [
+    "windows-terminal",
+    "wt",
+    "ai-agents",
+    "claude",
+    "claude-code",
+    "multiplexer",
+    "orchestrator",
+    "chief-of-staff",
+    "markdown",
+    "vault"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "templates/",
+    "README.md",
+    "LICENSE"
+  ]
+}
