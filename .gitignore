@@ -6,6 +6,7 @@ dist/
 .env.*
 
 # user vaults should never be checked into the tool repo
-vault/
-test-vault/
-example-vault/
+# (anchored to root so templates/vault/ is still tracked)
+/vault/
+/test-vault/
+/example-vault/
