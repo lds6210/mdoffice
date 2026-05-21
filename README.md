@@ -1,138 +1,159 @@
 # mdoffice
 
-> Markdown Office — your AI company runs on a folder of `.md` files.
+> **Turn fuzzy ideas into clear specs through an AI office that runs on markdown.**
+>
+> A tool for figuring out what to actually build, before writing code.
 
-**You talk to one agent — your Chief of Staff. The Chief delegates to specialist sub-agents and aggregates their work into reports. Every artifact lives as a markdown file in a shared vault, where you can read, edit, or redirect at any time.**
+## The premise
+
+**Development ends when you know the spec.** Once requirements are clear, an LLM writes the code in ten minutes. The real bottleneck — and it's been the bottleneck for backend developers forever — is the messy middle: figuring out what trade-offs matter, what decisions you're implicitly making, what you don't yet know.
+
+mdoffice is for that middle.
+
+You give the office a vague directive. A Chief of Staff agent runs it past specialist agents (backend, frontend, ...). The specialists don't write code — they **surface the unknowns**: trade-offs, missing decisions, hidden assumptions. Their output is markdown, structured so a human can read it and respond. You answer. The vault accumulates the answered questions as your spec emerges. By the time you actually open Cursor or Copilot, the spec is sharp enough that the code is almost dictation.
+
+A side effect: the vault becomes your **Architecture Decision Record**, written naturally as you go, never as a chore.
 
 ## Status
 
-WIP. v0.1 in progress. See `NOTES.md` for the full roadmap and design notes.
+WIP. v0.1 in progress. See `NOTES.md` for design notes and roadmap.
 
-## Why this matters
+## The two insights driving this
 
-The pain of letting an AI run end-to-end is **loss of mid-flight control**. Once it starts, you either let it finish (and pray) or kill it (and lose context). There's no clean way to nudge.
+**1. The intermediate artifact is the product, not the intervention surface.**
+The thesis isn't "interrupt the AI mid-flight." It's "read what the AI produced and learn what to ask better next time." Once you frame it that way, sync mechanisms and race conditions become non-problems — the user reads files when files are done, and steers by editing what to ask, not by editing in-flight work.
 
-mdoffice fixes this by making **the intermediate work product itself the intervention surface**. The Chief and specialists work in markdown files. At any moment you can open the vault and:
-
-- read what they're about to do — and stop them by editing the instruction
-- correct their understanding — edit the task file
-- inject new context — drop a note in the relevant role's folder
-- redirect them — rewrite the plan
-
-You don't fight the agent's flow. You steer the document. On the next read, the agent picks up the new direction. This is the difference between **supervising a black box** and **editing a draft**.
+**2. Specialists exist to draw out unknowns, not to write code.**
+A backend specialist's job isn't to implement the API. It's to look at the directive from a backend angle and ask, "have you decided about idempotency keys? client-generated or server-generated? what about retry strategy?" The output is a checklist of decisions, not a deliverable. You answer the checklist. That's the spec.
 
 ## The model
 
 ```
-You (CEO)
+You (CEO)                 — write a fuzzy directive
  │
  │  one pane: "mdoffice — chief"
  ▼
-Chief of Staff  ── runs as Claude Code with the vault's CLAUDE.md as its prompt
+Chief of Staff             — reads the directive, picks specialists,
+                             asks them to surface unknowns
  │
- │  Task tool (Claude Code sub-agents from vault/.claude/agents/*.md)
+ │  Task tool (Claude Code sub-agents)
  ▼
-Specialists  ── backend, frontend (v0.1)   |   full 10-role roster (v0.2)
+Specialists                — output structured questions, trade-offs,
+                             decisions-to-make. Not code. Not yet.
  │
- │  output files in 20_team/<role>/output/<date>-<slug>.md
  ▼
-Vault (markdown, source of truth)
+Vault (markdown)           — answered questions accumulate here.
+                             This IS your spec / ADR / institutional memory.
 ```
 
-- **One pane.** You only see the Chief. Specialists run as Claude Code sub-agents — invisible by design. This is the opposite of multi-pane multiplexers (wmux/cmux), which show you all the work and expect you to read it.
-- **All state in markdown.** No JSON sessions, no replay logs, no proprietary state. Every artifact a human can read, grep, and edit.
-- **Claude Code is the engine.** mdoffice ships a vault layout, system prompts, and sub-agent definitions — Claude Code is what actually runs in the pane.
+The "AI company" metaphor is the mechanism. Spec emergence is the value.
 
-## Daily flow (v0.1)
+## Daily flow
 
-1. You drop a directive in `00_ceo/instructions.md` — could be "ship the payment module," could be "research how Stripe does idempotency keys."
-2. The Chief reads it, decides which specialists are needed, writes a task file to each (`20_team/<role>/task.md`).
-3. The Chief invokes each specialist via the Task tool. The specialist returns when done; detailed output lands in `20_team/<role>/output/<date>-<slug>.md`.
-4. The Chief reads each specialist's output and appends a result-first highlight to `10_chief/report.md`.
-5. **You see the deliverables first, not the raw process.** Drill into specialist folders only if you want the trace.
-6. The Chief surfaces blockers and decisions to `10_chief/escalations.md` only when your input is required.
+1. You drop a fuzzy directive in `00_ceo/instructions.md`. Example: *"결제 모듈 만들어야 하는데 아직 어떻게 할지 모르겠어. 정리 좀 도와줘."* (or *"Need to build a payment module — not sure how yet. Help me figure it out."*)
+2. The Chief reads it, picks the right specialists, writes a task to each (`20_team/<role>/task.md`).
+3. Each specialist returns a structured artifact: **decisions you need to make**, **trade-offs**, **hidden assumptions**, **what's still missing**.
+4. The Chief surfaces a result-first summary in `10_chief/report.md`. You read.
+5. You answer the questions — either by editing `00_ceo/instructions.md` with your decisions, or by dropping notes directly into the relevant role's folder.
+6. Run again. The next round narrows further. Repeat until the spec is sharp.
 
-Normal operation: you read two files — `10_chief/report.md` (running status) and `10_chief/escalations.md` (things needing your call). The rest of the vault is there if you want to dig in.
+You're not supervising agents. You're using them as a mirror to find what you didn't know you had to decide.
 
 ## Asset accumulation
 
-Every specialist's output is also an **asset**, not a one-off byproduct. The vault is your company's growing IP:
+The answered-decision artifacts are durable. The Chief promotes reusable ones into `50_assets/`:
 
 ```
 vault/
-├── .claude/agents/      ← sub-agent definitions (backend.md, frontend.md, ...)
-├── CLAUDE.md            ← Chief of Staff system prompt (auto-loaded by Claude Code)
+├── .claude/agents/        ← sub-agent definitions (backend.md, frontend.md, ...)
+├── CLAUDE.md              ← Chief of Staff system prompt
 ├── 00_ceo/instructions.md
 ├── 10_chief/
-│   ├── report.md
-│   └── escalations.md
+│   ├── report.md          ← what the office did today
+│   └── escalations.md     ← decisions needing CEO answer
 ├── 20_team/
 │   ├── backend/{task.md, output/}
 │   └── frontend/{task.md, output/}
-└── 50_assets/           ← the long-term library
-    ├── code/            ← reusable snippets, modules
-    ├── design/          ← design docs, decisions, ADRs
-    ├── docs/            ← writeups, research notes
-    └── playbooks/       ← repeatable processes
+├── 50_assets/             ← growing institutional memory
+│   ├── decisions/         ← ADRs, generated as a side effect
+│   ├── trade-offs/        ← reusable trade-off tables
+│   ├── playbooks/         ← repeatable processes
+│   └── code/              ← reusable snippets (when code does happen)
+└── 90_archive/
 ```
 
-When a deliverable proves useful beyond its originating task, the Chief explicitly promotes it from `20_team/<role>/output/` into `50_assets/<category>/`. The next task can reference prior assets instead of redoing the work. Over time the vault accumulates institutional knowledge in markdown — fully readable, fully grep-able, fully under your control.
+You don't write ADRs separately — they emerge from the act of using the office.
 
 ## Usage
 
 ```sh
-# Scaffold a new vault (and optionally open it in Obsidian)
-mdoffice init [path]
+# Scaffold a new vault (open it in Obsidian for the best experience)
 mdoffice init my-project-vault --obsidian
 
 # Open an existing vault in Obsidian
 mdoffice open my-project-vault
 
-# Spawn the Chief pane and queue a directive (one-shot mode)
-mdoffice run "ship the payment module" --vault my-project-vault
+# One-shot: drop a directive and run the office once
+mdoffice run "결제 모듈 어떻게 설계할지 정리 좀 도와줘" --vault my-project-vault
 
-# Keep the office running — Chief pane + vault watcher (primary mode)
+# Daemon mode: keep the office running while you edit instructions in your editor
 mdoffice serve --vault my-project-vault
 ```
 
 ## Requirements
 
 - **Node.js 18+**
-- **Claude Code** on PATH (mdoffice v0.1 is Claude Code-specific — specialists are defined as Claude Code sub-agents in `.claude/agents/`)
+- **Claude Code** on PATH — specialists are defined as Claude Code sub-agents in `.claude/agents/`. v0.1 is Claude Code-specific by design (ship fast, abstract later if needed).
 - **A terminal mdoffice can spawn into:**
   - v0.1: Windows Terminal on Windows 10 1903+ / Windows 11, **and** macOS (iTerm2 via AppleScript)
   - v0.2+: Linux (tmux / kitty / gnome-terminal)
-- **Optional but recommended: Obsidian** — the vault is built around markdown, and Obsidian's graph view makes it sing. mdoffice doesn't depend on it; any markdown editor (VS Code, Typora, `cat`) works.
+- **Recommended: Obsidian** — the vault is built around markdown. Obsidian's graph view + backlinks turn the vault into a navigable knowledge base. Any markdown editor works, but Obsidian is the intended dashboard.
 
-The core (vault layout, Chief prompt, sub-agent definitions) is OS-independent. Only pane spawning is platform-specific, isolated in `src/spawn/<platform>.js`.
+## How is this different from oh-my-claudecode / wmux / Cursor / Devin?
 
-## How is this different from oh-my-claudecode / wmux / cmux / Claude Squad?
+| | mdoffice (this) | oh-my-claudecode (34.5k★) | wmux family | Cursor / Devin / Aider |
+|---|---|---|---|---|
+| What's it for | **figuring out the spec** | running multi-agent pipelines | watching N agents in panes | writing the code |
+| When in workflow | **before code** | during execution | during execution | the code itself |
+| Output | structured decisions + ADRs | execution artifacts | terminal state | code |
+| Competes with | Notion docs, whiteboard sessions | other multi-agent suites | tmux + AI | other coding agents |
+| Surface | one pane + a vault | slash + HUD + artifacts | N panes | IDE |
+| Org metaphor | explicit CEO / Chief / Specialists | "teams-first" slogan | flat | flat |
+| State | all markdown | JSON / JSONL + skills | terminal memory | code files |
+| Obsidian | **first-class** | none | none | none |
 
-There are already multi-agent tools for Claude Code, and some of them are very popular. mdoffice doesn't try to replace them — it targets a different segment.
+mdoffice is **the layer above coding agents**, not a competitor to them. The Cursor users are the natural downstream — they take the sharpened spec from mdoffice's vault and feed it to their AI to generate code that actually fits what they want.
 
-|                          | mdoffice (this)                              | oh-my-claudecode (34.5k★)            | wmux family (Electron multiplexers)  |
-|--------------------------|----------------------------------------------|--------------------------------------|--------------------------------------|
-| Surface                  | one pane, one report file                    | slash commands + HUD + artifacts     | N panes, one per agent               |
-| State                    | all markdown                                 | JSON / JSONL + skills folder         | terminal memory                      |
-| Org metaphor             | **explicit CEO / Chief / Specialists**       | "teams-first" as a slogan            | flat agent list                      |
-| Asset library            | **explicit `50_assets/` promotion by Chief** | auto-extracted skills                | none                                 |
-| User intervention        | **edit the markdown file**                   | slash command, replay log inspection | open a pane and type                 |
-| Obsidian integration     | **first-class (`mdoffice open`)**            | none                                 | none                                 |
-| Distribution             | npm CLI (planned)                            | Claude Code plugin + npm             | Electron installer                   |
-| Footprint                | tiny                                         | medium                               | heavy                                |
+## Roadmap
 
-If you want a power-user multi-agent suite, oh-my-claudecode is the safer choice today. If you want **a markdown-native virtual company with one human-facing pane and Obsidian as your dashboard**, mdoffice is built for you.
+### v0.1 — proof of life
+- `mdoffice init / run / serve / open` — done
+- Single chief pane, Claude Code sub-agents for backend + frontend specialists
+- Chief prompt and specialist prompts tuned for **unknowns surfacing**, not implementation
+- Obsidian URI integration
+- Cross-platform from day one (Windows + macOS)
 
-## Future / extensibility
+### v0.2 — full roster + npm publish
+- Add PM, Architect, QA, Designer, DevOps, Security, Data, Docs specialists
+- Dynamic team sizing (Chief picks N from task)
+- Linux spawn adapter
+- npm publish
 
-Deliberately out of scope for v0.1. Architecture leaves room to land these cleanly later.
+### v0.3 — coordination quality
+- Inter-specialist mediation (Chief routes between specialists)
+- Auto-archive on task completion
+- Hybrid asset promotion: Chief proposes promotions in `escalations.md`, user one-line approves
+- Standard task.md sections (`## Goal / ## Constraints / ## Out of scope`)
 
-- **Full 10-specialist roster** (v0.2) — PM, Architect, QA, Designer, DevOps, Security, Data, Docs join Backend and Frontend.
-- **Dynamic team sizing** (v0.2) — Chief picks N (1–10) from task complexity.
-- **AI-CEO / Hybrid CEO modes** (v0.3+) — let an AI own vision and strategy when you don't know the domain; you become the board / approver.
-- **Self-improvement loop** (v0.3+) — Chief autonomously audits the codebase and the competitive landscape during idle time, drafts PRs, asks for your approval.
-- **YAML org charts** (v0.4+) — define new roles, swap who's human vs AI per seat, share recipes as npm packages (`@mdoffice/recipe-*`).
-- **Obsidian plugin** (v0.4+) — richer CEO dashboard (graph view of dependencies, daily standup notes, asset search).
+### v0.4+
+- Recipe hub: vault layouts as npm packages (`@mdoffice/recipe-*`)
+- Obsidian plugin (richer dashboard, interactive artifact rendering)
+- Interactive intermediate artifacts (mermaid / excalidraw / runnable snippets) — explore which form earns its weight
+- Non-Claude AI CLI support — only after the patterns are clearly proven
+
+### Deferred to a separate track (not v0.1)
+- **AI-CEO / autonomous mode** — interesting, but a different product. If the human isn't deciding, the v0.1 thesis ("human knows what they want by reading the vault") falls apart. Belongs in a sister project (`mdoffice-autonomous`) or v1.0+ after the human-in-loop version is validated. See `NOTES.md` "the longer arc" section for the bigger vision this connects to.
+- **Self-improvement loop** — Chief auto-auditing the codebase during idle time. Same reasoning: shouldn't dilute v0.1.
 
 ## License
 
