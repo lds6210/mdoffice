@@ -1,38 +1,28 @@
 'use strict';
 
 const { spawn } = require('child_process');
-const path = require('path');
 
 /**
  * Spawn the office in Windows Terminal.
- * Layout (v0.1):
- *   ┌──────────┬──────────┐
- *   │          │ backend  │
- *   │  chief   ├──────────┤
- *   │          │ frontend │
- *   └──────────┴──────────┘
  *
- * Each pane runs `command` (default: "claude") in its role's vault subfolder.
- * Pane titles are set so the user can tell them apart at a glance.
+ * Layout (v0.1, post pane-rethink):
+ *   ┌─────────────────────────────┐
+ *   │                             │
+ *   │       chief (only pane)     │
+ *   │                             │
+ *   └─────────────────────────────┘
+ *
+ * Specialists are NOT spawned as panes — they run as Claude Code sub-agents
+ * invoked by the Chief via the Task tool (defined in vault/.claude/agents/).
+ * The user only ever talks to the Chief, in one window. Specialist outputs
+ * land as markdown files in the vault.
  */
 module.exports = function spawnOffice({ vaultPath, command }) {
   const cmd = command || 'claude';
 
-  const chiefDir    = vaultPath;
-  const backendDir  = path.join(vaultPath, '20_team', 'backend');
-  const frontendDir = path.join(vaultPath, '20_team', 'frontend');
-
-  // `wt` accepts `;` as a command separator between sub-actions in one
-  // invocation. When passed via Node child_process arg array (shell: false),
-  // the literal `;` token is passed through as its own argv element and wt
-  // parses it correctly.
   const args = [
     '-w', '0',
-    'new-tab',    '-d', chiefDir,    '--title', 'chief',    'cmd', '/K', cmd,
-    ';',
-    'split-pane', '-V', '-d', backendDir,  '--title', 'backend',  'cmd', '/K', cmd,
-    ';',
-    'split-pane', '-H', '-d', frontendDir, '--title', 'frontend', 'cmd', '/K', cmd,
+    'new-tab', '-d', vaultPath, '--title', 'mdoffice — chief', 'cmd', '/K', cmd,
   ];
 
   const child = spawn('wt', args, {
@@ -46,5 +36,5 @@ module.exports = function spawnOffice({ vaultPath, command }) {
     console.error('  install: https://aka.ms/terminal');
   });
   child.unref();
-  return { pid: child.pid, layout: 'chief | (backend / frontend)' };
+  return { pid: child.pid, layout: 'single chief pane' };
 };
