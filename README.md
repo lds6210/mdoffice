@@ -2,17 +2,17 @@
 
 > Markdown Office — your AI company runs on a folder of `.md` files.
 
-**A hierarchy of AI agents organized as a company. The CEO can be you, or an AI, or both. The Chief of Staff (always AI, ideally the strongest available model) delegates to up to 10 specialist agents. All coordination happens through markdown files in a shared vault, so you can intervene at any moment by editing a file.**
+**You talk to one agent — your Chief of Staff. The Chief delegates to up to 10 specialist agents. Every piece of work they produce lands as a markdown file in a shared vault, where you can read, edit, or repurpose it at any time.**
 
 ## Status
 
-WIP. v0.1 in progress. See `NOTES.md` for the full concept and roadmap.
+WIP. v0.1 in progress. See `NOTES.md` for the full roadmap and design notes.
 
-## Why this matters (the real point)
+## Why this matters
 
 The pain of letting an AI run end-to-end is **loss of mid-flight control**. Once it starts, you either let it finish (and pray) or kill it (and lose context). There's no clean way to nudge.
 
-mdoffice fixes this by making **the intermediate work product itself the intervention surface**. The Chief and team specialists work in markdown files. At any moment you can open the vault and:
+mdoffice fixes this by making **the intermediate work product itself the intervention surface**. The Chief and specialists work in markdown files. At any moment you can open the vault and:
 
 - read what they're about to do — and stop them by editing the instruction
 - correct their understanding — edit the task file
@@ -24,8 +24,8 @@ You don't fight the agent's flow. You steer the document. On the next poll, the 
 ## The model
 
 ```
-CEO  ← human, AI, or hybrid
- └─ Chief of Staff (always AI, strongest model)
+You
+ └─ Chief of Staff (AI, strongest model)
       ├─ PM         ├─ DevOps
       ├─ Architect  ├─ Security
       ├─ Backend    ├─ Data
@@ -34,33 +34,43 @@ CEO  ← human, AI, or hybrid
 ```
 
 - The Chief decides how many specialists to spin up (1–10) per task.
-- All inter-role communication is **markdown files in a shared vault folder**.
+- All inter-role communication is markdown files in a shared vault.
 - The vault is just `.md` files. View it in Obsidian, VS Code, or `cat` — your choice.
-- You write instructions to one file. The Chief reports back to one file. That's it.
+- You write a directive to one file. The Chief reports back to one file. Specialists write their work products to their own folders. That's the whole protocol.
 
-## Who plays CEO
+## Daily flow (v0.1)
 
-mdoffice doesn't assume the human is at the top of the hierarchy. The CEO seat is configurable:
+1. You drop a directive in `00_ceo/instructions.md` — could be "ship the payment module," could be "research how Stripe does idempotency keys."
+2. The Chief reads it, decides which specialists are needed, writes a task file to each.
+3. Specialists work. Each writes their deliverables to their own `output/` folder as markdown.
+4. The Chief tracks progress, reads each specialist's output as it lands, and updates `10_chief/report.md` with a running summary.
+5. **You see the deliverables first, not the raw process.** When a specialist's output lands, the Chief lifts the highlight into the report. If you want the full trace, drill into the specialist's folder. Most of the time you won't need to.
+6. The Chief surfaces blockers and decisions to `10_chief/escalations.md` only when your input is required.
 
-- **Human-CEO mode** — you write vision and directives. The Chief executes. Best when you know the domain deeply.
-- **AI-CEO mode** — an AI agent owns vision and direction, the Chief executes, you act as board / advisor / final approver. Best when you're stepping into a domain you don't know well. The AI CEO does the market research, the competitive analysis, the planning. You say yes or no.
-- **Hybrid mode** — you set the north star (one paragraph). AI CEO fills in the details, scopes the work, hands it to the Chief, escalates back to you only on decisions you said you cared about.
+This means in normal operation you only ever read two files: `10_chief/report.md` (running status) and `10_chief/escalations.md` (things needing your call). The rest of the vault is there if you want to dig in, but you don't have to.
 
-The org chart itself is data, not code. Future versions let you define new roles, swap who's human vs AI per seat, and assemble custom org structures from yaml.
+## Asset accumulation
 
-## Self-improvement loop (the killer demo)
+Every specialist's output is also an **asset**, not a one-off byproduct. The vault is your company's growing IP:
 
-The first user of mdoffice is mdoffice itself.
+```
+vault/
+├── 00_ceo/instructions.md
+├── 10_chief/
+│   ├── report.md
+│   └── escalations.md
+├── 20_team/
+│   ├── backend/output/
+│   ├── frontend/output/
+│   └── ...
+└── 50_assets/                ← the long-term library
+    ├── code/                 ← reusable snippets, modules
+    ├── design/               ← design docs, decisions, ADRs
+    ├── docs/                 ← writeups, research notes
+    └── playbooks/            ← repeatable processes
+```
 
-Once the office is running, the Chief can self-initiate work between user directives:
-
-- scan competitor repos (`gh search`, release notes) and write a weekly diff report
-- audit own codebase (test coverage gaps, stale TODOs, dead code) and propose fixes
-- draft PRs for proposed fixes, run tests, push to a branch, open the PR
-- summarize what changed, drop the PR link into `00_ceo/decisions_needed.md`
-- you (or AI CEO) say merge / hold / kill
-
-You provide the vision. The office grows itself toward that vision. Your job is direction and approval, not implementation.
+When a piece of work proves useful beyond its originating task, the Chief promotes it from a specialist's `output/` into `50_assets/`. The next task can reference and build on prior assets instead of redoing the same research or rewriting the same boilerplate. Over time the office accumulates institutional knowledge in markdown — fully readable, fully grep-able, fully under your control.
 
 ## Planned usage
 
@@ -68,7 +78,10 @@ You provide the vision. The office grows itself toward that vision. Your job is 
 # Bootstrap a new office (creates vault folder + role templates)
 mdoffice init
 
-# Open the office (spawns Chief + N team panes in Windows Terminal)
+# Keep the office running (primary mode — Chief polls the vault, you edit directives)
+mdoffice serve
+
+# One-shot: run a single directive end-to-end
 mdoffice run "ship the payment module"
 
 # Run with a fixed team size override
@@ -82,17 +95,24 @@ mdoffice chief
 
 - Node.js 18+
 - An AI CLI on PATH (Claude Code recommended)
-- A terminal that mdoffice knows how to spawn panes in:
+- A terminal mdoffice knows how to spawn panes in:
   - **v0.1 (now):** Windows Terminal on Windows 10 1903+ / Windows 11
-  - **v0.4+ (planned):** macOS (iTerm2 / Terminal.app) and Linux (tmux / kitty) via terminal adapter
+  - **v0.4+ (planned):** macOS (iTerm2 / Terminal.app) and Linux (tmux / kitty) via swappable adapter
 
-The core of mdoffice (vault, Chief, specialist orchestration, markdown-mediated coordination) is OS-independent. Only the pane-spawning layer is platform-specific.
+The core (vault, Chief, specialists, coordination) is OS-independent. Only pane spawning is platform-specific.
 
 ## Why mdoffice (vs other AI multiplexers)
 
-Other AI multiplexers (`wmux` and friends) put N agent panes in front of you and expect you to supervise all of them. mdoffice puts **one human-facing pane** — the Chief — in front of you. The Chief manages the rest. Your cognitive load stays at 1, not N.
+Other AI multiplexers (`wmux` and friends) put N agent panes in front of you and expect you to supervise all of them. mdoffice puts **one human-facing pane** — the Chief — in front of you. The Chief manages the rest. Your cognitive load stays at 1, not N. State lives in markdown files, not terminal memory, so you can intervene by editing a file, and so the office picks up where it left off across restarts.
 
-State lives in markdown files, not in terminal memory. Restart anything, the office picks up where it left off. And because the state is plain `.md`, you can intervene at any moment by editing a file — no need to wrestle a running agent for control.
+## Future / extensibility
+
+These are deliberately out of scope for v0.1, but the architecture is designed to land them cleanly later.
+
+- **Configurable CEO seat** — the human is not assumed to be at the top. v0.3+ supports AI-CEO mode (an AI owns vision and strategy; you act as board / final approver) and hybrid mode (you set a one-paragraph north star, the AI CEO scopes from there). Useful when entering a domain you don't know well.
+- **Self-improvement loop** — once stable, the Chief can self-initiate work during idle time: scan competitor repos, audit the codebase, draft PRs for proposed improvements, push branches, and surface them in `00_ceo/decisions_needed.md`. mdoffice's first long-term customer is mdoffice.
+- **YAML org charts** — define new roles, swap who's human vs AI per seat, share company recipes as npm packages (`@mdoffice/recipe-*`).
+- **Obsidian plugin** — richer CEO interface (graph view of dependencies, daily standup notes, asset search).
 
 ## License
 
