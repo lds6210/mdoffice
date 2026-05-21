@@ -15,11 +15,10 @@ if (cmd === '--version' || cmd === '-v' || cmd === 'version') {
 }
 
 const handlers = {
-  init: '../src/cmd/init.js',
-  run:  '../src/cmd/run.js',
-  open: '../src/cmd/open.js',
-  // serve:  '../src/cmd/serve.js',   // wired later
-  // chief:  '../src/cmd/chief.js',   // wired later
+  init:  '../src/cmd/init.js',
+  run:   '../src/cmd/run.js',
+  open:  '../src/cmd/open.js',
+  serve: '../src/cmd/serve.js',
 };
 
 if (!(cmd in handlers)) {
@@ -35,10 +34,9 @@ function printHelp() {
 
 usage:
   mdoffice init [path] [--obsidian]   scaffold a vault at <path> (default: ./vault)
-  mdoffice run "<task>"               spawn the office (Chief pane) and queue a directive
+  mdoffice run "<task>"               spawn the Chief pane and append a directive (one-shot)
+  mdoffice serve [vault]              spawn the Chief pane and watch the vault forever (primary mode)
   mdoffice open [vault]               open the vault in Obsidian
-  mdoffice serve                      (not yet implemented)
-  mdoffice chief                      (not yet implemented)
 
   mdoffice version               print version
   mdoffice help                  print this help
