@@ -50,6 +50,8 @@ The pain mdoffice is built to solve is real and specific.
 
 mdoffice flips that. The backend engineer drops the spec into the vault and gets back an interactive HTML prototype with their own structural choices visible. *That* is what they hand to the designer — "make this beautiful," not "figure out what I want."
 
+(mdoffice originated as one Korean backend engineer's scratch against Figma-first workflows. The pain is local; the framing isn't. But the Korean examples scattered through this README are intentional — that's whose itch the v0.1 prompts are tuned for first.)
+
 This is also why the v0.1 marquee artifact is HTML and not markdown alone. A markdown table of API endpoints is fine. An HTML prototype that a designer can open, a PM can click through, and a frontend can use as a contract is *better*. The prototype IS the conversation for the rest of the team.
 
 ## Engine-agnostic vault
@@ -67,7 +69,7 @@ The implication: **your vault is your asset, not your lock-in.** When a new mode
 3. The Chief invokes spec-reader → backend + frontend → prototyper. Outputs land as markdown / HTML in `20_team/*/output/`.
 4. Open `10_chief/report.md` and the linked prototype HTML. Click through the prototype.
 5. Edit `00_ceo/instructions.md` to answer what wasn't clear (or to redirect). Run again.
-6. Decisions accumulate in `50_assets/` — your ADR, written automatically.
+6. Decisions surface in `10_chief/escalations.md`. When you approve a promotion, the Chief moves the artifact into `50_assets/` — your ADR, accreted one approval at a time (no surprise auto-writes).
 
 ## Vault structure
 
@@ -102,8 +104,13 @@ my-project-vault/
 ## Usage
 
 ```sh
-# Install
-npm install -g mdoffice   # (v0.2)
+# Install (v0.2)
+npm install -g mdoffice
+
+# Install (v0.1 — direct from source)
+git clone https://github.com/lds6210/mdoffice.git
+cd mdoffice
+npm link   # exposes the `mdoffice` command globally; or call `node bin/mdoffice.js` directly
 
 # Scaffold a new vault (Claude Code is the default engine)
 mdoffice init my-project-vault --obsidian
@@ -128,7 +135,7 @@ mdoffice serve --vault my-project-vault
 - **A terminal mdoffice can spawn into:**
   - v0.1: **Windows Terminal on Win10 1903+ / Win11** (the maintainer's only test platform). macOS (iTerm2 via AppleScript) code ships but is **untested by the maintainer — community PRs to verify and fix it are welcomed**.
   - v0.2+: Linux (tmux / kitty / gnome-terminal)
-- **Recommended: Obsidian** — the vault is built around markdown. Any editor works (VS Code, Typora, `cat`), but Obsidian is the intended dashboard.
+- **Strongly recommended: Obsidian.** A vault that's been working for weeks isn't a flat folder — it's a graph of linked decisions, prior trade-offs, and reused playbooks. Obsidian's graph view, backlinks, and full-text search aren't a nice-to-have; they're how you actually navigate the vault as it accumulates. Any markdown editor (VS Code, Typora, `cat`) can open the files, but you'll feel the missing dashboard the moment the vault grows past one project.
 
 ## How is this different from oh-my-claudecode / wmux / Cursor / Devin?
 
