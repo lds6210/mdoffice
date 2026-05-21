@@ -10,3 +10,7 @@ dist/
 /vault/
 /test-vault/
 /example-vault/
+/real-test/
+/dogfood/
+/dogfood-*/
+/*-vault/

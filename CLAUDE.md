@@ -61,11 +61,13 @@ The tool MUST run on Windows AND macOS from v0.1.
 - `CHANGELOG.md` (once it exists)
 
 **NEVER GOES TO GITHUB** (`.gitignore` enforces this):
-- `/vault/`, `/test-vault/`, `/example-vault/` at repo root — user's working vaults
+- Any vault folder at repo root, regardless of name (`/vault/`, `/test-vault/`, `/example-vault/`, `/real-test/`, `/dogfood-*/`, `/*-vault/`)
 - `.env`, `.env.*` — secrets, tokens, API keys
 - `node_modules/`, `dist/`, `*.log`, `.DS_Store`
 - Anything containing the user's real project content
 - The user's Obsidian vault content — **lives in the user's Obsidian folder, NEVER mirrored to this repo**
+
+**Vault location rule (added 2026-05-22 after a near-miss):** dogfood / test vaults should live OUTSIDE this repo. Prefer `C:/workspace/mdoffice-vaults/<name>/` or similar. If a vault must live inside the repo for some reason, add its exact name to `.gitignore` BEFORE the first `git add`. The maintainer once let `real-test/` slip into a commit; templates only, no harm, but don't repeat.
 
 **LIVES IN USER'S OBSIDIAN VAULT** (separate from this repo):
 - `Obsidian Vault/mdoffice/` — the user's writable workspace for thinking about this project: rules mirror, progress journal, brainstorms, decisions.
