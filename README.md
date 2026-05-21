@@ -96,10 +96,10 @@ mdoffice chief
 - Node.js 18+
 - An AI CLI on PATH (Claude Code recommended)
 - A terminal mdoffice knows how to spawn panes in:
-  - **v0.1 (now):** Windows Terminal on Windows 10 1903+ / Windows 11
-  - **v0.4+ (planned):** macOS (iTerm2 / Terminal.app) and Linux (tmux / kitty) via swappable adapter
+  - **v0.1 (now):** Windows Terminal on Windows 10 1903+ / Windows 11, **and** macOS (iTerm2 / Terminal.app via AppleScript)
+  - **v0.2+ (planned):** Linux (tmux / kitty / gnome-terminal) via swappable adapter
 
-The core (vault, Chief, specialists, coordination) is OS-independent. Only pane spawning is platform-specific.
+The core (vault, Chief, specialists, coordination) is OS-independent. Only pane spawning is platform-specific, isolated in `src/spawn/<platform>.js`.
 
 ## Why mdoffice (vs other AI multiplexers)
 

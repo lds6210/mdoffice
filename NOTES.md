@@ -90,8 +90,10 @@ Open question: does the CEO type into a pane at all, or just into the vault file
 ### v0.1 (MVP) — minimum proof-of-life
 - `mdoffice init` — scaffold vault folder + role templates
 - `mdoffice run "<task>"` — spawn Chief pane (Claude Code with a chief-of-staff system prompt) + 2 specialist panes (start with backend + frontend hardcoded)
+- `mdoffice serve` — same as `run` but daemon-style, polls the vault forever
 - Chief reads CEO instructions, writes a task file to each specialist, reads back their output
 - File watcher in each pane so role agents react to their task.md being updated
+- **Cross-platform: Windows (`wt`) AND macOS (iTerm2 / Terminal.app) from v0.1**. Both spawn adapters ship together.
 - Ship as GitHub-only release (no npm publish until v0.2)
 
 ### v0.2 — dynamic team size
@@ -124,8 +126,8 @@ src/
 │   └── watcher.js        ← markdown file change detection
 └── spawn/                ← OS-specific
     ├── windows.js        ← wt-based pane spawn (v0.1)
-    ├── mac.js            ← iTerm2 osascript / Terminal.app (v0.4+)
-    └── linux.js          ← tmux / kitty (v0.4+)
+    ├── mac.js            ← iTerm2 osascript / Terminal.app (v0.1 — cross-platform from day one)
+    └── linux.js          ← tmux / kitty (v0.2+)
 ```
 
 `bin/mdoffice.js` detects the platform at runtime and picks the right spawn adapter. If no adapter exists for the current OS, it fails fast with a clear message.
@@ -134,7 +136,7 @@ src/
 
 - Node.js 18+ on PATH
 - An AI CLI on PATH (Claude Code is the first target; multi-CLI later)
-- v0.1 target: Windows Terminal on Win10 1903+ / Win11. macOS/Linux adapters land in v0.4+.
+- v0.1 target: Windows Terminal on Win10 1903+ / Win11 **and** macOS (iTerm2 / Terminal.app). Linux adapter lands in v0.2+.
 - Token cost is not a constraint — premium model on Chief is the design center
 - Single-user, single-machine — no team sync, no cloud state
 
