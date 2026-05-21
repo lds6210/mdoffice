@@ -2,7 +2,7 @@
 
 > Markdown Office — your AI company runs on a folder of `.md` files.
 
-**You are the CEO. You talk only to your Chief of Staff. The Chief delegates to a team of up to 10 specialists. Everything happens through markdown files.**
+**A hierarchy of AI agents organized as a company. The CEO can be you, or an AI, or both. The Chief of Staff (always AI, ideally the strongest available model) delegates to up to 10 specialist agents. All coordination happens through markdown files in a shared vault, so you can intervene at any moment by editing a file.**
 
 ## Status
 
@@ -24,24 +24,43 @@ You don't fight the agent's flow. You steer the document. On the next poll, the 
 ## The model
 
 ```
-You (CEO)
-  └─ Chief of Staff   ← you only talk to this one
-       ├─ PM
-       ├─ Architect
-       ├─ Backend
-       ├─ Frontend
-       ├─ QA
-       ├─ Designer
-       ├─ DevOps
-       ├─ Security
-       ├─ Data
-       └─ Docs
+CEO  ← human, AI, or hybrid
+ └─ Chief of Staff (always AI, strongest model)
+      ├─ PM         ├─ DevOps
+      ├─ Architect  ├─ Security
+      ├─ Backend    ├─ Data
+      ├─ Frontend   ├─ Docs
+      ├─ QA         └─ Designer
 ```
 
-- The Chief decides how many specialists to spin up (1–10) based on the task.
+- The Chief decides how many specialists to spin up (1–10) per task.
 - All inter-role communication is **markdown files in a shared vault folder**.
-- The vault is just a directory of `.md` files. View it in Obsidian, VS Code, or `cat` — your choice.
-- You write your instructions to one file. The Chief reports back to one file. That's it.
+- The vault is just `.md` files. View it in Obsidian, VS Code, or `cat` — your choice.
+- You write instructions to one file. The Chief reports back to one file. That's it.
+
+## Who plays CEO
+
+mdoffice doesn't assume the human is at the top of the hierarchy. The CEO seat is configurable:
+
+- **Human-CEO mode** — you write vision and directives. The Chief executes. Best when you know the domain deeply.
+- **AI-CEO mode** — an AI agent owns vision and direction, the Chief executes, you act as board / advisor / final approver. Best when you're stepping into a domain you don't know well. The AI CEO does the market research, the competitive analysis, the planning. You say yes or no.
+- **Hybrid mode** — you set the north star (one paragraph). AI CEO fills in the details, scopes the work, hands it to the Chief, escalates back to you only on decisions you said you cared about.
+
+The org chart itself is data, not code. Future versions let you define new roles, swap who's human vs AI per seat, and assemble custom org structures from yaml.
+
+## Self-improvement loop (the killer demo)
+
+The first user of mdoffice is mdoffice itself.
+
+Once the office is running, the Chief can self-initiate work between user directives:
+
+- scan competitor repos (`gh search`, release notes) and write a weekly diff report
+- audit own codebase (test coverage gaps, stale TODOs, dead code) and propose fixes
+- draft PRs for proposed fixes, run tests, push to a branch, open the PR
+- summarize what changed, drop the PR link into `00_ceo/decisions_needed.md`
+- you (or AI CEO) say merge / hold / kill
+
+You provide the vision. The office grows itself toward that vision. Your job is direction and approval, not implementation.
 
 ## Planned usage
 
