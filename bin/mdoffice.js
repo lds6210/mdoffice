@@ -17,6 +17,7 @@ if (cmd === '--version' || cmd === '-v' || cmd === 'version') {
 const handlers = {
   init: '../src/cmd/init.js',
   run:  '../src/cmd/run.js',
+  open: '../src/cmd/open.js',
   // serve:  '../src/cmd/serve.js',   // wired later
   // chief:  '../src/cmd/chief.js',   // wired later
 };
@@ -33,10 +34,11 @@ function printHelp() {
   console.log(`mdoffice — markdown-native AI company
 
 usage:
-  mdoffice init [path]           scaffold a vault at <path> (default: ./vault)
-  mdoffice run "<task>"          spawn the office (Chief + Backend + Frontend) and queue a directive
-  mdoffice serve                 (not yet implemented)
-  mdoffice chief                 (not yet implemented)
+  mdoffice init [path] [--obsidian]   scaffold a vault at <path> (default: ./vault)
+  mdoffice run "<task>"               spawn the office (Chief pane) and queue a directive
+  mdoffice open [vault]               open the vault in Obsidian
+  mdoffice serve                      (not yet implemented)
+  mdoffice chief                      (not yet implemented)
 
   mdoffice version               print version
   mdoffice help                  print this help
