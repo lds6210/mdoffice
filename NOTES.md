@@ -111,11 +111,30 @@ Open question: does the CEO type into a pane at all, or just into the vault file
 - Obsidian plugin for richer CEO interface (graph view of dependencies, daily standup notes)
 - Non-Claude AI CLI support (Codex, Gemini)
 
+## Architecture: OS-independent core, swappable spawn layer
+
+Only the pane-spawning code is platform-specific. Everything else (vault layout, file watching, Chief logic, specialist prompts, delegation rules, report aggregation) is portable Node.js.
+
+```
+src/
+├── core/                 ← OS-independent
+│   ├── vault.js          ← vault structure, file I/O
+│   ├── chief.js          ← Chief prompt + delegation logic
+│   ├── specialist.js     ← specialist prompt templates
+│   └── watcher.js        ← markdown file change detection
+└── spawn/                ← OS-specific
+    ├── windows.js        ← wt-based pane spawn (v0.1)
+    ├── mac.js            ← iTerm2 osascript / Terminal.app (v0.4+)
+    └── linux.js          ← tmux / kitty (v0.4+)
+```
+
+`bin/mdoffice.js` detects the platform at runtime and picks the right spawn adapter. If no adapter exists for the current OS, it fails fast with a clear message.
+
 ## Constraints and assumptions
 
-- Windows Terminal required (Win10 1903+)
 - Node.js 18+ on PATH
 - An AI CLI on PATH (Claude Code is the first target; multi-CLI later)
+- v0.1 target: Windows Terminal on Win10 1903+ / Win11. macOS/Linux adapters land in v0.4+.
 - Token cost is not a constraint — premium model on Chief is the design center
 - Single-user, single-machine — no team sync, no cloud state
 

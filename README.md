@@ -61,16 +61,19 @@ mdoffice chief
 
 ## Requirements
 
-- Windows 10 1903+ / Windows 11
-- Windows Terminal (`wt` on PATH)
 - Node.js 18+
-- An AI CLI (Claude Code recommended) on PATH
+- An AI CLI on PATH (Claude Code recommended)
+- A terminal that mdoffice knows how to spawn panes in:
+  - **v0.1 (now):** Windows Terminal on Windows 10 1903+ / Windows 11
+  - **v0.4+ (planned):** macOS (iTerm2 / Terminal.app) and Linux (tmux / kitty) via terminal adapter
 
-## Why mdoffice (vs other Windows multiplexers)
+The core of mdoffice (vault, Chief, specialist orchestration, markdown-mediated coordination) is OS-independent. Only the pane-spawning layer is platform-specific.
 
-Other Windows AI multiplexers (`wmux` etc.) put N agent panes in front of you and expect you to supervise all of them. mdoffice puts **one human-facing pane** — the Chief — in front of you. The Chief manages the rest. Your cognitive load stays at 1, not N.
+## Why mdoffice (vs other AI multiplexers)
 
-State lives in markdown files, not in terminal memory. Restart anything, the office picks up where it left off.
+Other AI multiplexers (`wmux` and friends) put N agent panes in front of you and expect you to supervise all of them. mdoffice puts **one human-facing pane** — the Chief — in front of you. The Chief manages the rest. Your cognitive load stays at 1, not N.
+
+State lives in markdown files, not in terminal memory. Restart anything, the office picks up where it left off. And because the state is plain `.md`, you can intervene at any moment by editing a file — no need to wrestle a running agent for control.
 
 ## License
 

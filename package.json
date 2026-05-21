@@ -5,9 +5,6 @@
   "bin": {
     "mdoffice": "./bin/mdoffice.js"
   },
-  "os": [
-    "win32"
-  ],
   "license": "MIT",
   "author": "lds6210",
   "repository": {
